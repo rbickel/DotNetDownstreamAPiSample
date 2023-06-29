@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <WebProject_DirectoryAccessLevelKey>0</WebProject_DirectoryAccessLevelKey>
+    <RootNamespace>CallMSGraph</RootNamespace>
+    <AssemblyName>CallMSGraph</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Identity.Web.DownstreamApi" Version="2.12.4" />
+    <PackageReference Include="Microsoft.Identity.Web.UI" Version="2.12.4" />
+  </ItemGroup>
+
+</Project>
