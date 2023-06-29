@@ -20,6 +20,12 @@ namespace WebApp_OpenIDConnect_DotNet_graph.Controllers
     [Authorize]
     public class HomeController : Controller
     {
+
+        // /// </summary>
+        // static readonly string[] scopeRequiredByApi = new string[] { "access_as_user" };
+
+        // static readonly string[] scopesToAccessDownstreamApi = new string[] { "api://MyTodolistService/access_as_user" };
+
         private readonly ILogger<HomeController> _logger;
         private readonly IConfiguration _configuration;
         readonly IAuthorizationHeaderProvider authorizationHeaderProvider;
@@ -32,12 +38,32 @@ namespace WebApp_OpenIDConnect_DotNet_graph.Controllers
             _configuration = configuration;
 
             this.authorizationHeaderProvider = authorizationHeaderProvider;
+
+            // Capture the Scopes for Graph that were used in the original request for an Access token (AT) for MS Graph as
+            // they'd be needed again when requesting a fresh AT for Graph during claims challenge processing
         }
 
         [AuthorizeForScopes(ScopeKeySection = "DownstreamApi:Scopes")]
         public async Task<IActionResult> Index()
         {
-            return View(new GenericViewModel());
+
+                var app = ConfidentialClientApplicationBuilder.Create("bfb7db00-f29d-484c-9bc6-c8abc75f12d4")
+                .WithClientSecret("meX8Q~s_S_ZHPbluaIN9gW54GPn85aM.uHCE1ccK")
+                .WithAuthority(new Uri($"https://login.microsoftonline.com/16b3c013-d300-468d-ac64-7eda0820b6d3"))
+                .Build();
+
+            string[] scopes = _configuration.GetValue<string>("DownstreamApi:Scopes")?.Split(' ');
+            var token = await app.AcquireTokenForClient(scopes).ExecuteAsync();
+
+            HttpClient client = new HttpClient();
+            client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token.AccessToken}");
+            var response = await client.GetAsync("http://localhost:5114/get");
+            Console.WriteLine(response.StatusCode);
+            Console.WriteLine(token.AccessToken);
+            
+            var content = await response.Content.ReadAsStringAsync();
+
+            return View(new GenericViewModel { Content = content});
         }
 
         [AuthorizeForScopes(ScopeKeySection = "DownstreamApi:Scopes")]
@@ -56,6 +82,11 @@ namespace WebApp_OpenIDConnect_DotNet_graph.Controllers
             var content = await response.Content.ReadAsStringAsync();
             
             return View(new GenericViewModel { Content = content});
+        }
+
+        public IActionResult Privacy()
+        {
+            return View();
         }
 
         [AllowAnonymous]
